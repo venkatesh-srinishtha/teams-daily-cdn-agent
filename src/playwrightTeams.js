@@ -72,7 +72,7 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
 
   try {
     console.log("📱 Navigating to Microsoft Teams Web App (https://teams.live.com)...");
-    await page.goto("https://teams.live.com", { waitUntil: "networkidle", timeout: 60000 });
+    await page.goto("https://teams.live.com", { waitUntil: "domcontentloaded", timeout: 60000 });
 
     console.log(`🔎 Searching for chat/channel: "${targetChatName}"...`);
     await page.waitForTimeout(5000);
