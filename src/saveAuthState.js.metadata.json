@@ -1,0 +1,5 @@
+{
+  "summary": "Script to log into Teams once locally and save browser session state for GitHub Actions.",
+  "updatedAt": "2026-09-03T07:02:01.746412Z",
+  "userFacing": true
+}

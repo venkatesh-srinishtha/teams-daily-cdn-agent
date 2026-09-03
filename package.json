@@ -1,0 +1,17 @@
+{
+  "name": "teams-daily-cdn-agent",
+  "version": "1.0.0",
+  "description": "Daily MS Teams bot posting simple CDN concepts, analogies, and code snippets via Playwright automated browser",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test:dry-run": "DRY_RUN=true node src/index.js",
+    "post:playwright": "USE_PLAYWRIGHT=true node src/index.js",
+    "login": "node src/saveAuthState.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "playwright": "^1.42.1"
+  }
+}

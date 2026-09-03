@@ -1,0 +1,41 @@
+name: MS Teams Daily CDN Agent
+
+on:
+  schedule:
+    # Runs every day at 03:00 UTC (8:30 AM IST / morning time)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  post-cdn-lesson:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Daily CDN Agent (Playwright Browser)
+        env:
+          TEAMS_STORAGE_STATE: ${{ secrets.TEAMS_STORAGE_STATE }}
+          TEAMS_TARGET_CHAT: ${{ secrets.TEAMS_TARGET_CHAT || 'Tech Team' }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          USE_PLAYWRIGHT: 'true'
+        run: npm run post:playwright
+
+      - name: Upload Verification Screenshots (on error or success)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teams-screenshots
+          path: '*.png'
+          if-no-files-found: ignore
