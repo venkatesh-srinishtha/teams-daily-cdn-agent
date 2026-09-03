@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { getTodayLesson } from "./cdnLessons.js";
+import { generateGeminiLesson } from "./geminiLessonGenerator.js";
 import { sendToTeamsWebhook } from "./teamsWebhook.js";
 import { postToTeamsViaPlaywright } from "./playwrightTeams.js";
 
@@ -11,8 +12,14 @@ async function run() {
     const usePlaywright = process.env.USE_PLAYWRIGHT === "true" || process.argv.includes("--playwright");
 
     console.log("🚀 Starting MS Teams Daily CDN Agent...");
-    const lesson = getTodayLesson();
-    console.log(`📌 Today's Topic: Lesson #${lesson.id} - ${lesson.title}`);
+    
+    // Try generating dynamic lesson with Gemini AI first, fall back to curated curriculum
+    let lesson = await generateGeminiLesson();
+    if (!lesson) {
+      lesson = getTodayLesson();
+    }
+
+    console.log(`📌 Today's Topic: Lesson #${lesson.id} - ${lesson.title}${lesson.isAiGenerated ? " (✨ AI Generated)" : ""}`);
 
     if (usePlaywright) {
       console.log("🤖 Mode: Playwright Automated Browser");

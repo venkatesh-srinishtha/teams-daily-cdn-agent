@@ -29,6 +29,7 @@ jobs:
           TEAMS_STORAGE_STATE: ${{ secrets.TEAMS_STORAGE_STATE }}
           TEAMS_TARGET_CHAT: ${{ secrets.TEAMS_TARGET_CHAT || 'Tech Team' }}
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           USE_PLAYWRIGHT: 'true'
         run: npm run post:playwright
 
