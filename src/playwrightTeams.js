@@ -75,29 +75,45 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
     await page.goto("https://teams.live.com", { waitUntil: "domcontentloaded", timeout: 60000 });
 
     console.log(`🔎 Searching for chat/channel: "${targetChatName}"...`);
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(7000);
 
+    let chatSelected = false;
     const targetChatSelector = `text="${targetChatName}"`;
     const chatElement = page.locator(targetChatSelector).first();
 
-    if (await chatElement.isVisible()) {
+    if (await chatElement.isVisible().catch(() => false)) {
       console.log(`✅ Found chat "${targetChatName}", clicking...`);
       await chatElement.click();
+      chatSelected = true;
     } else {
       console.log(`🔍 Chat "${targetChatName}" not immediately visible, searching via search bar...`);
-      const searchBox = page.locator('input[placeholder*="Search"], input[aria-label*="Search"]').first();
-      if (await searchBox.isVisible()) {
+      const searchBox = page.locator('input[placeholder*="Search"], input[aria-label*="Search"], input[data-tid*="search"]').first();
+      if (await searchBox.isVisible().catch(() => false)) {
         await searchBox.fill(targetChatName);
         await page.keyboard.press("Enter");
         await page.waitForTimeout(3000);
-        await page.locator(`text="${targetChatName}"`).first().click();
+        const searchResult = page.locator(`text="${targetChatName}"`).first();
+        if (await searchResult.isVisible().catch(() => false)) {
+          await searchResult.click();
+          chatSelected = true;
+        }
       }
     }
 
-    await page.waitForTimeout(3000);
+    // Fallback: If target chat wasn't found by exact name, select the first available chat in your Teams list
+    if (!chatSelected) {
+      console.log(`⚠️ Chat "${targetChatName}" was not found by name. Selecting the first chat in your Teams chat list...`);
+      const firstChat = page.locator('div[role="listitem"], div[data-tid*="chat-list-item"], [role="treeitem"], [aria-label*="Chat"]').first();
+      if (await firstChat.isVisible().catch(() => false)) {
+        await firstChat.click();
+        chatSelected = true;
+      }
+    }
+
+    await page.waitForTimeout(4000);
 
     console.log("✍️ Entering daily lesson message into editor...");
-    const editor = page.locator('[contenteditable="true"], textarea[aria-label*="Type a message"], div[role="textbox"]').first();
+    const editor = page.locator('[contenteditable="true"], textarea[aria-label*="Type a message"], div[role="textbox"], [data-tid*="ckeditor"]').first();
     
     if (await editor.isVisible()) {
       await editor.focus();
