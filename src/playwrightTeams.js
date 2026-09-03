@@ -1,5 +1,6 @@
 import { chromium } from "playwright";
 import fs from "fs";
+import zlib from "zlib";
 
 export async function postToTeamsViaPlaywright(lesson, options = {}) {
   const {
@@ -41,7 +42,13 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
 
   if (process.env.TEAMS_STORAGE_STATE) {
     console.log("🔑 Using session state from TEAMS_STORAGE_STATE environment variable...");
-    const jsonStr = Buffer.from(process.env.TEAMS_STORAGE_STATE, "base64").toString("utf-8");
+    const rawBuffer = Buffer.from(process.env.TEAMS_STORAGE_STATE.trim(), "base64");
+    let jsonStr;
+    try {
+      jsonStr = zlib.gunzipSync(rawBuffer).toString("utf-8");
+    } catch {
+      jsonStr = rawBuffer.toString("utf-8");
+    }
     storageStateData = JSON.parse(jsonStr);
   } else if (fs.existsSync("storageState.json")) {
     console.log("🔑 Using local 'storageState.json' session file...");

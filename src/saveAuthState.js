@@ -1,5 +1,26 @@
 import { chromium } from "playwright";
 import fs from "fs";
+import zlib from "zlib";
+
+export function compressStorageState(storageState) {
+  const stateCopy = JSON.parse(JSON.stringify(storageState));
+  if (stateCopy.origins) {
+    stateCopy.origins.forEach(o => {
+      if (o.localStorage) {
+        o.localStorage = o.localStorage.filter(item => {
+          const n = item.name;
+          if (n.startsWith("msal.")) return true;
+          if (n.startsWith("tmp.auth.v1.") && n.includes("User")) return true;
+          if (n === "tmp.deviceId" || n === "timezone") return true;
+          return false;
+        });
+      }
+    });
+  }
+  const jsonStr = JSON.stringify(stateCopy);
+  const compressedBuffer = zlib.gzipSync(Buffer.from(jsonStr));
+  return compressedBuffer.toString("base64");
+}
 
 async function saveSession() {
   console.log("🌐 Opening Microsoft Teams login browser window...");
@@ -19,18 +40,19 @@ async function saveSession() {
   await new Promise((resolve) => process.stdin.once("data", resolve));
 
   const storageState = await context.storageState({ path: "storageState.json" });
-  const base64State = Buffer.from(JSON.stringify(storageState)).toString("base64");
+  const base64State = compressStorageState(storageState);
 
   console.log("\n✅ Session saved successfully to 'storageState.json'!");
-  console.log("\n---------------------------------------------------");
-  console.log("🔑 YOUR GITHUB SECRET VALUE (TEAMS_STORAGE_STATE):");
+  console.log(`\n🔑 GITHUB SECRET VALUE (TEAMS_STORAGE_STATE) - Size: ${base64State.length} bytes (Limit: 48,000):`);
   console.log("---------------------------------------------------");
   console.log(base64State);
   console.log("---------------------------------------------------");
-  console.log("\nCopy the long string above and save it in GitHub Secrets as TEAMS_STORAGE_STATE!");
+  console.log("\nCopy the string above and save it in GitHub Secrets as TEAMS_STORAGE_STATE!");
 
   await browser.close();
   process.exit(0);
 }
 
-saveSession();
+if (process.argv[1]?.endsWith("saveAuthState.js")) {
+  saveSession();
+}

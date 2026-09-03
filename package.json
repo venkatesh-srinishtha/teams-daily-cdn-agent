@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "test:dry-run": "DRY_RUN=true node src/index.js",
     "post:playwright": "USE_PLAYWRIGHT=true node src/index.js",
-    "login": "node src/saveAuthState.js"
+    "login": "node src/saveAuthState.js",
+    "export-secret": "node src/exportSecret.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
