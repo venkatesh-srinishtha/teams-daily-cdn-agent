@@ -124,9 +124,20 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
         await page.keyboard.press("Shift+Enter");
       }
       
-      console.log("🚀 Pressing Send...");
-      await page.keyboard.press("Enter");
-      await page.waitForTimeout(3000);
+      console.log("🚀 Dispatching message (clicking Send button & Ctrl+Enter)...");
+      
+      // 1. Try pressing Control+Enter / Meta+Enter (standard Teams send shortcut)
+      await page.keyboard.press("Control+Enter");
+      await page.waitForTimeout(1000);
+
+      // 2. Click the explicit Send button icon in Teams editor (Paper Airplane button)
+      const sendButton = page.locator('button[aria-label*="Send"], button[title*="Send"], button[aria-label*="send"], button[data-tid*="send"], [data-icon-name="Send"]').first();
+      if (await sendButton.isVisible().catch(() => false)) {
+        console.log("✅ Found Teams Send button, clicking...");
+        await sendButton.click();
+      }
+
+      await page.waitForTimeout(4000);
 
       await page.screenshot({ path: "teams_posted.png" });
       console.log("📸 Screenshot saved as 'teams_posted.png'.");
