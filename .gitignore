@@ -3,4 +3,5 @@ node_modules/
 storageState.json
 secret_value.txt
 *.png
+*.zip
 .DS_Store
