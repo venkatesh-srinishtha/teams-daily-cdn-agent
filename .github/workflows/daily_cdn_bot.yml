@@ -27,7 +27,7 @@ jobs:
       - name: Run Daily CDN Agent (Playwright Browser)
         env:
           TEAMS_STORAGE_STATE: ${{ secrets.TEAMS_STORAGE_STATE }}
-          TEAMS_TARGET_CHAT: ${{ secrets.TEAMS_TARGET_CHAT || 'kaushik_srinishtha' }}
+          TEAMS_TARGET_CHAT: ${{ vars.TEAMS_TARGET_CHAT || secrets.TEAMS_TARGET_CHAT || 'kaushik_srinishtha' }}
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           USE_PLAYWRIGHT: 'true'
