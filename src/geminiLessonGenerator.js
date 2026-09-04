@@ -9,29 +9,36 @@ export async function generateGeminiLesson() {
     return null;
   }
 
-  console.log("🤖 Generating fresh, unique CDN concept using Google Gemini AI...");
+  const selectedModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  console.log(`🤖 Generating fresh, unique CDN concept using Google Gemini AI (${selectedModel})...`);
 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `You are an expert Web Infrastructure & CDN Engineer.
-Generate a brand-new, engaging, daily educational lesson explaining a Content Delivery Network (CDN), Edge Computing, Web Infrastructure, Caching, or Web Security concept.
+    const prompt = `You are a Principal Software Architect & Systems Engineer.
+Generate a brand-new, engaging, daily technical educational lesson.
 
-Make it beginner-friendly, high impact, and educational with a fun real-world analogy and a practical code example.
+Topics can cover:
+- CDN & Edge Computing (Stale-While-Revalidate, Geo-DNS, Edge Workers, Cache Invalidation, Origin Shield)
+- System Design & Scalability (Load Balancers, Circuit Breakers, Rate Limiting, Message Queues, Database Sharding)
+- Backend & Databases (Indexing, Redis Caching, Connection Pooling, ACID vs BASE, Connection Keep-Alive)
+- Web Security & Protocols (OAuth2/JWT, CORS, Content Security Policy, TLS Handshakes, Webhooks, OWASP Top 10)
+- Modern Web Performance & Networking (HTTP/3 QUIC, WebSockets, gRPC, Brotli Compression, Service Workers)
+- Cloud & Infrastructure (Docker, Kubernetes Basics, Serverless Architecture, Event-Driven Architecture)
 
-Select from topics such as: Edge Workers, Stale-While-Revalidate, HTTP/3 QUIC, Brotli Compression, Geo-DNS, DDoS Protection, Origin Shield, TLS Offloading, ETag Caching, Image Optimization, Byte Range Requests, Private vs Public Cache, Serverless at the Edge, Web Application Firewall (WAF), or Cache Revalidation.
+Make it beginner-friendly, high impact, and practical with a fun real-world analogy and a clear code or command example.
 
 Return a valid JSON object following this schema:
-- title: Short, catchy lesson title (e.g. "Stale-While-Revalidate Caching")
-- badge: Category tag (e.g. "Cache Strategy", "Edge Computing", "Security", "Networking")
-- analogy: Relatable real-world analogy title with emoji (e.g. "🗞️ Newspaper Subscription Delivery")
+- title: Short, catchy lesson title (e.g. "Circuit Breaker Pattern in Microservices")
+- badge: Category tag (e.g. "System Design", "Security", "CDN & Edge", "Database", "Networking")
+- analogy: Relatable real-world analogy title with emoji (e.g. "⚡ Electrical Fuse Box")
 - analogyText: 1-2 sentence real-life analogy explaining the concept
 - explanation: 2-3 sentence clear, technical yet simple explanation
-- codeSnippet: Realistic code snippet (HTTP header, Node.js code, cURL command, or HTML script tag)
+- codeSnippet: Realistic code snippet, HTTP header, cURL command, or architecture config
 - takeaway: 1-sentence memorable key takeaway`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: selectedModel,
       contents: prompt,
       config: {
         responseMimeType: "application/json",

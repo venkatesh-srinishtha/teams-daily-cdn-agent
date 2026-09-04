@@ -78,36 +78,52 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
     await page.waitForTimeout(7000);
 
     let chatSelected = false;
-    const targetChatSelector = `text="${targetChatName}"`;
-    const chatElement = page.locator(targetChatSelector).first();
 
-    if (await chatElement.isVisible().catch(() => false)) {
-      console.log(`✅ Found chat "${targetChatName}", clicking...`);
-      await chatElement.click();
-      chatSelected = true;
-    } else {
-      console.log(`🔍 Chat "${targetChatName}" not immediately visible, searching via search bar...`);
+    // Generate search term variants (e.g. kaushik_srinishtha vs kaushik_ srinishtha vs kaushik)
+    const searchVariants = [
+      targetChatName,
+      targetChatName.replace("_", "_ "),
+      targetChatName.replace("_ ", "_"),
+      targetChatName.replace("_", " "),
+      targetChatName.split("_")[0]
+    ];
+
+    // 1. Try finding in sidebar list
+    for (const variant of searchVariants) {
+      if (!variant || variant.length < 3) continue;
+      const chatElement = page.locator(`div[role="listitem"]:has-text("${variant}"), [data-tid*="chat-list-item"]:has-text("${variant}"), [role="treeitem"]:has-text("${variant}")`).first();
+      if (await chatElement.isVisible().catch(() => false)) {
+        console.log(`✅ Found chat matching "${variant}" in sidebar, clicking...`);
+        await chatElement.click();
+        chatSelected = true;
+        break;
+      }
+    }
+
+    // 2. If not found in sidebar, use Teams search bar
+    if (!chatSelected) {
+      console.log(`🔍 Chat "${targetChatName}" not immediately visible in sidebar, searching via search bar...`);
       const searchBox = page.locator('input[placeholder*="Search"], input[aria-label*="Search"], input[data-tid*="search"]').first();
       if (await searchBox.isVisible().catch(() => false)) {
-        await searchBox.fill(targetChatName);
+        await searchBox.click();
+        await searchBox.fill(targetChatName.replace("_", " "));
         await page.keyboard.press("Enter");
         await page.waitForTimeout(3000);
-        const searchResult = page.locator(`text="${targetChatName}"`).first();
-        if (await searchResult.isVisible().catch(() => false)) {
-          await searchResult.click();
-          chatSelected = true;
+        
+        for (const variant of searchVariants) {
+          const searchResult = page.locator(`text="${variant}"`).first();
+          if (await searchResult.isVisible().catch(() => false)) {
+            console.log(`✅ Found chat result for "${variant}", clicking...`);
+            await searchResult.click();
+            chatSelected = true;
+            break;
+          }
         }
       }
     }
 
-    // Fallback: If target chat wasn't found by exact name, select the first available chat in your Teams list
     if (!chatSelected) {
-      console.log(`⚠️ Chat "${targetChatName}" was not found by name. Selecting the first chat in your Teams chat list...`);
-      const firstChat = page.locator('div[role="listitem"], div[data-tid*="chat-list-item"], [role="treeitem"], [aria-label*="Chat"]').first();
-      if (await firstChat.isVisible().catch(() => false)) {
-        await firstChat.click();
-        chatSelected = true;
-      }
+      throw new Error(`Target chat "${targetChatName}" could not be found in your MS Teams chat list. Execution aborted to prevent sending to the wrong group.`);
     }
 
     await page.waitForTimeout(4000);
@@ -119,22 +135,44 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
       await editor.focus();
       
       const lines = messageContent.split("\n");
-      for (const line of lines) {
-        await page.keyboard.type(line);
-        await page.keyboard.press("Shift+Enter");
+      for (let i = 0; i < lines.length; i++) {
+        await page.keyboard.type(lines[i]);
+        if (i < lines.length - 1) {
+          await page.keyboard.press("Shift+Enter");
+        }
       }
       
-      console.log("🚀 Dispatching message (clicking Send button & Ctrl+Enter)...");
-      
-      // 1. Try pressing Control+Enter / Meta+Enter (standard Teams send shortcut)
-      await page.keyboard.press("Control+Enter");
       await page.waitForTimeout(1000);
+      console.log("🚀 Dispatching message (clicking Send button & pressing Enter)...");
+      
+      // 1. Locate and click Teams Send button (Paper Airplane icon button)
+      const sendButtonSelectors = [
+        'button[data-tid*="send"]',
+        'button[aria-label*="Send"]',
+        'button[aria-label*="send"]',
+        'button[title*="Send"]',
+        'button[title*="send"]',
+        '[data-icon-name="Send"]',
+        'button:has(svg[data-icon-name="Send"])',
+        'button:has(path[d*="M"])'
+      ];
 
-      // 2. Click the explicit Send button icon in Teams editor (Paper Airplane button)
-      const sendButton = page.locator('button[aria-label*="Send"], button[title*="Send"], button[aria-label*="send"], button[data-tid*="send"], [data-icon-name="Send"]').first();
-      if (await sendButton.isVisible().catch(() => false)) {
-        console.log("✅ Found Teams Send button, clicking...");
-        await sendButton.click();
+      let sent = false;
+      for (const selector of sendButtonSelectors) {
+        const btn = page.locator(selector).first();
+        if (await btn.isVisible().catch(() => false)) {
+          console.log(`✅ Found Teams Send button using selector '${selector}', clicking...`);
+          await btn.click({ force: true }).catch(() => {});
+          sent = true;
+          break;
+        }
+      }
+
+      if (!sent) {
+        console.log("⚠️ Send button not directly clicked via selector, attempting keyboard shortcuts...");
+        await page.keyboard.press("Control+Enter");
+        await page.waitForTimeout(500);
+        await page.keyboard.press("Enter");
       }
 
       await page.waitForTimeout(4000);

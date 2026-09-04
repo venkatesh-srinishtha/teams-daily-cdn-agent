@@ -21,9 +21,21 @@ async function run() {
 
     console.log(`📌 Today's Topic: Lesson #${lesson.id} - ${lesson.title}${lesson.isAiGenerated ? " (✨ AI Generated)" : ""}`);
 
+    const targetArgIndex = process.argv.findIndex(arg => arg.startsWith("--target"));
+    let cliTarget = null;
+    if (targetArgIndex !== -1) {
+      const arg = process.argv[targetArgIndex];
+      if (arg.includes("=")) {
+        cliTarget = arg.split("=")[1];
+      } else if (process.argv[targetArgIndex + 1]) {
+        cliTarget = process.argv[targetArgIndex + 1];
+      }
+    }
+    const targetChatName = cliTarget || process.env.TEAMS_TARGET_CHAT;
+
     if (usePlaywright) {
       console.log("🤖 Mode: Playwright Automated Browser");
-      await postToTeamsViaPlaywright(lesson, { dryRun: isDryRun });
+      await postToTeamsViaPlaywright(lesson, { dryRun: isDryRun, targetChatName });
     } else {
       console.log("📡 Mode: MS Teams Incoming Webhook");
       const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
