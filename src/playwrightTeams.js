@@ -75,7 +75,8 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
     await page.goto("https://teams.live.com", { waitUntil: "domcontentloaded", timeout: 60000 });
 
     console.log(`🔎 Searching for chat/channel: "${targetChatName}"...`);
-    await page.waitForTimeout(7000);
+    await page.waitForSelector('div[role="listitem"], input[aria-label*="Search"], input[placeholder*="Search"]', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(2000);
 
     let chatSelected = false;
 
