@@ -4,7 +4,7 @@ import zlib from "zlib";
 
 export async function postToTeamsViaPlaywright(lesson, options = {}) {
   const {
-    targetChatName = process.env.TEAMS_TARGET_CHAT || "CDN-learning",
+    targetChatName = process.env.TEAMS_TARGET_CHAT || "kaushik_srinishtha",
     isHeadless = process.env.HEADLESS !== "false",
     dryRun = false
   } = options;
