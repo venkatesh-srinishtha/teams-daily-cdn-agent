@@ -9,7 +9,7 @@ export async function generateGeminiLesson() {
     return null;
   }
 
-  const selectedModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const selectedModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
   console.log(`🤖 Generating fresh, unique CDN concept using Google Gemini AI (${selectedModel})...`);
 
   try {
