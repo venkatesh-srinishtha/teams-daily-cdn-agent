@@ -79,21 +79,20 @@ export async function postToTeamsViaPlaywright(lesson, options = {}) {
 
     let chatSelected = false;
 
-    // Generate search term variants (e.g. kaushik_srinishtha vs kaushik_ srinishtha vs kaushik)
+    // Generate search term variants (e.g. kaushik_srinishtha vs kaushik_ srinishtha)
     const searchVariants = [
       targetChatName,
       targetChatName.replace("_", "_ "),
       targetChatName.replace("_ ", "_"),
-      targetChatName.replace("_", " "),
-      targetChatName.split("_")[0]
+      targetChatName.replace("_", " ")
     ];
 
-    // 1. Try finding in sidebar list
+    // 1. Try finding exact chat title in sidebar list
     for (const variant of searchVariants) {
-      if (!variant || variant.length < 3) continue;
-      const chatElement = page.locator(`div[role="listitem"]:has-text("${variant}"), [data-tid*="chat-list-item"]:has-text("${variant}"), [role="treeitem"]:has-text("${variant}")`).first();
+      if (!variant) continue;
+      const chatElement = page.locator(`[role="listitem"] :text-is("${variant}"), [role="listitem"] :text("${variant}"), [role="treeitem"] :text("${variant}"), text="${variant}"`).first();
       if (await chatElement.isVisible().catch(() => false)) {
-        console.log(`✅ Found chat matching "${variant}" in sidebar, clicking...`);
+        console.log(`✅ Found exact chat title matching "${variant}" in sidebar, clicking...`);
         await chatElement.click();
         chatSelected = true;
         break;
